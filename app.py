@@ -15,33 +15,20 @@ from sklearn.calibration import CalibratedClassifierCV
 st.set_page_config(page_title="Emotion AI", page_icon="🧠", layout="centered")
 
 # -------------------------------
-# CUSTOM CSS (HIGH-END UI)
+# CLEAN UI STYLE
 # -------------------------------
 st.markdown("""
 <style>
-body {
-    background-color: #0f172a;
-}
 .big-title {
     text-align: center;
-    font-size: 42px;
+    font-size: 40px;
     font-weight: bold;
-    color: #38bdf8;
+    color: #4f46e5;
 }
 .subtitle {
     text-align: center;
-    font-size: 16px;
-    color: #94a3b8;
-    margin-bottom: 30px;
-}
-.result-box {
-    padding: 20px;
-    border-radius: 12px;
-    background-color: #1e293b;
-    text-align: center;
-    font-size: 24px;
-    font-weight: bold;
-    color: white;
+    color: gray;
+    margin-bottom: 25px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -63,7 +50,7 @@ def clean_text(text):
 def load_data():
     df = pd.read_csv("training.csv")
 
-    # flexible columns
+    # detect columns
     text_col = 'text' if 'text' in df.columns else 'sentence'
     label_col = 'emotion' if 'emotion' in df.columns else 'label'
 
@@ -97,75 +84,57 @@ def train_model(df, label_col):
 model, vectorizer = train_model(df, label_col)
 
 # -------------------------------
-# EMOJI MAP
+# EMOTION STANDARDIZATION
 # -------------------------------
-emoji_map = {
-    "happy": "😊",
-    "sad": "😢",
-    "angry": "😡",
-    "fear": "😨",
-    "love": "❤️",
-    "surprise": "😲",
-    "neutral": "😐"
+emotion_map = {
+    "joy": "happy",
+    "fear": "anxious",
+    "anger": "angry",
+    "sadness": "sad"
 }
 
 # -------------------------------
 # HEADER
 # -------------------------------
 st.markdown('<div class="big-title">🧠 Emotion AI</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle">Analyze emotions from text instantly</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">Simple Emotion Detection from Text</div>', unsafe_allow_html=True)
 
 # -------------------------------
-# INPUT BOX
+# INPUT
 # -------------------------------
-user_input = st.text_area("💬 Enter your sentence", height=120)
+user_input = st.text_area("Enter your text:")
 
 # -------------------------------
-# BUTTON
+# PREDICTION
 # -------------------------------
-if st.button("✨ Analyze Emotion"):
+if st.button("Predict Emotion"):
 
     if user_input.strip() == "":
-        st.warning("⚠️ Please enter some text")
+        st.warning("Please enter some text")
     else:
         cleaned = clean_text(user_input)
         vector = vectorizer.transform([cleaned])
 
         prediction = model.predict(vector)[0]
-        prediction = str(prediction)
+        prediction = str(prediction).lower()
 
+        # standardize output
+        prediction = emotion_map.get(prediction, prediction)
+
+        # confidence
         probs = model.predict_proba(vector)[0]
         confidence = np.max(probs) * 100
 
-        emoji = emoji_map.get(prediction.lower(), "🤖")
+        # -------------------------------
+        # OUTPUT
+        # -------------------------------
+        st.markdown("### 🎯 Emotion")
+        st.success(prediction)
 
-        # -------------------------------
-        # RESULT DISPLAY
-        # -------------------------------
-        st.markdown("### 🎯 Prediction")
-        st.markdown(f'<div class="result-box">{emoji} {prediction.upper()}</div>', unsafe_allow_html=True)
-
-        # -------------------------------
-        # CONFIDENCE
-        # -------------------------------
-        st.markdown("### 📊 Confidence")
-        st.progress(int(confidence))
-        st.write(f"**{confidence:.2f}% confident**")
-
-        # -------------------------------
-        # PROBABILITY CHART
-        # -------------------------------
-        st.markdown("### 📈 Emotion Breakdown")
-
-        prob_df = pd.DataFrame({
-            "Emotion": model.classes_,
-            "Probability": probs
-        }).sort_values(by="Probability", ascending=False)
-
-        st.bar_chart(prob_df.set_index("Emotion"))
+        st.write(f"Confidence: {confidence:.2f}%")
 
 # -------------------------------
 # FOOTER
 # -------------------------------
 st.markdown("---")
-st.caption("🚀 Built with Streamlit | AI Project by Kalika")
+st.caption("Built with Streamlit")
