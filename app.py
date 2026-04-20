@@ -34,8 +34,7 @@ uploaded = files.upload()
 
 import pandas as pd
 
-phrases = pd.read_csv('Emotion Phrases.csv', header=None)
-phrases.columns = ['emotion', 'text']
+pd.read_csv("training.csv")
 
 print('Dataset Shape:', phrases.shape)
 
