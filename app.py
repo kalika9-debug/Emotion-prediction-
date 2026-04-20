@@ -15,29 +15,35 @@ from sklearn.calibration import CalibratedClassifierCV
 st.set_page_config(page_title="Emotion AI", page_icon="🧠", layout="centered")
 
 # -------------------------------
-# CUSTOM STYLE
+# CUSTOM CSS (HIGH-END UI)
 # -------------------------------
 st.markdown("""
-    <style>
-    .main {
-        background-color: #0f172a;
-        color: white;
-    }
-    .stTextArea textarea {
-        font-size: 16px;
-    }
-    .big-title {
-        text-align: center;
-        font-size: 40px;
-        font-weight: bold;
-        color: #38bdf8;
-    }
-    .subtitle {
-        text-align: center;
-        color: #94a3b8;
-        margin-bottom: 20px;
-    }
-    </style>
+<style>
+body {
+    background-color: #0f172a;
+}
+.big-title {
+    text-align: center;
+    font-size: 42px;
+    font-weight: bold;
+    color: #38bdf8;
+}
+.subtitle {
+    text-align: center;
+    font-size: 16px;
+    color: #94a3b8;
+    margin-bottom: 30px;
+}
+.result-box {
+    padding: 20px;
+    border-radius: 12px;
+    background-color: #1e293b;
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: white;
+}
+</style>
 """, unsafe_allow_html=True)
 
 # -------------------------------
@@ -57,7 +63,7 @@ def clean_text(text):
 def load_data():
     df = pd.read_csv("training.csv")
 
-    # Flexible column detection
+    # flexible columns
     text_col = 'text' if 'text' in df.columns else 'sentence'
     label_col = 'emotion' if 'emotion' in df.columns else 'label'
 
@@ -71,7 +77,7 @@ df, text_col, label_col = load_data()
 # TRAIN MODEL
 # -------------------------------
 @st.cache_resource
-def train_model(df, text_col, label_col):
+def train_model(df, label_col):
     X = df['clean_text']
     y = df[label_col]
 
@@ -83,17 +89,15 @@ def train_model(df, text_col, label_col):
     )
 
     base_model = LinearSVC(C=2, class_weight='balanced')
-
-    # Add probability support
     model = CalibratedClassifierCV(base_model)
     model.fit(X_train, y_train)
 
     return model, vectorizer
 
-model, vectorizer = train_model(df, text_col, label_col)
+model, vectorizer = train_model(df, label_col)
 
 # -------------------------------
-# EMOJI MAPPING
+# EMOJI MAP
 # -------------------------------
 emoji_map = {
     "happy": "😊",
@@ -106,20 +110,20 @@ emoji_map = {
 }
 
 # -------------------------------
-# UI HEADER
+# HEADER
 # -------------------------------
 st.markdown('<div class="big-title">🧠 Emotion AI</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle">Detect emotions from text using Machine Learning</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">Analyze emotions from text instantly</div>', unsafe_allow_html=True)
 
 # -------------------------------
-# INPUT
+# INPUT BOX
 # -------------------------------
-user_input = st.text_area("💬 Enter your sentence:", height=120)
+user_input = st.text_area("💬 Enter your sentence", height=120)
 
 # -------------------------------
 # BUTTON
 # -------------------------------
-if st.button("🔍 Analyze Emotion"):
+if st.button("✨ Analyze Emotion"):
 
     if user_input.strip() == "":
         st.warning("⚠️ Please enter some text")
@@ -128,26 +132,31 @@ if st.button("🔍 Analyze Emotion"):
         vector = vectorizer.transform([cleaned])
 
         prediction = model.predict(vector)[0]
-        probs = model.predict_proba(vector)[0]
+        prediction = str(prediction)
 
+        probs = model.predict_proba(vector)[0]
         confidence = np.max(probs) * 100
 
         emoji = emoji_map.get(prediction.lower(), "🤖")
 
         # -------------------------------
-        # OUTPUT
+        # RESULT DISPLAY
         # -------------------------------
-        st.markdown("### 🎯 Result")
-        st.success(f"{emoji} **{prediction.upper()}**")
+        st.markdown("### 🎯 Prediction")
+        st.markdown(f'<div class="result-box">{emoji} {prediction.upper()}</div>', unsafe_allow_html=True)
 
+        # -------------------------------
+        # CONFIDENCE
+        # -------------------------------
         st.markdown("### 📊 Confidence")
         st.progress(int(confidence))
-        st.write(f"Confidence: {confidence:.2f}%")
+        st.write(f"**{confidence:.2f}% confident**")
 
         # -------------------------------
-        # SHOW PROBABILITIES
+        # PROBABILITY CHART
         # -------------------------------
         st.markdown("### 📈 Emotion Breakdown")
+
         prob_df = pd.DataFrame({
             "Emotion": model.classes_,
             "Probability": probs
@@ -159,4 +168,4 @@ if st.button("🔍 Analyze Emotion"):
 # FOOTER
 # -------------------------------
 st.markdown("---")
-st.caption("Built with ❤️ using Streamlit & Machine Learning")
+st.caption("🚀 Built with Streamlit | AI Project by Kalika")
