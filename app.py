@@ -15,25 +15,6 @@ from sklearn.calibration import CalibratedClassifierCV
 st.set_page_config(page_title="Emotion AI", page_icon="🧠", layout="centered")
 
 # -------------------------------
-# CLEAN UI STYLE
-# -------------------------------
-st.markdown("""
-<style>
-.big-title {
-    text-align: center;
-    font-size: 40px;
-    font-weight: bold;
-    color: #4f46e5;
-}
-.subtitle {
-    text-align: center;
-    color: gray;
-    margin-bottom: 25px;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# -------------------------------
 # TEXT CLEANING
 # -------------------------------
 def clean_text(text):
@@ -61,6 +42,27 @@ def load_data():
 df, text_col, label_col = load_data()
 
 # -------------------------------
+# LABEL FIX (IMPORTANT)
+# -------------------------------
+# If labels are numbers → convert to meaningful text
+label_map = {
+    0: "sad",
+    1: "happy",
+    2: "angry",
+    3: "anxious",
+    4: "love",
+    5: "surprise",
+    6: "neutral"
+}
+
+# If numeric → map them
+if df[label_col].dtype != 'object':
+    df[label_col] = df[label_col].map(label_map)
+
+# Ensure labels are string
+df[label_col] = df[label_col].astype(str)
+
+# -------------------------------
 # TRAIN MODEL
 # -------------------------------
 @st.cache_resource
@@ -84,33 +86,16 @@ def train_model(df, label_col):
 model, vectorizer = train_model(df, label_col)
 
 # -------------------------------
-# EMOTION STANDARDIZATION
+# SIMPLE UI
 # -------------------------------
-emotion_map = {
-    "joy": "happy",
-    "fear": "anxious",
-    "anger": "angry",
-    "sadness": "sad"
-}
+st.title("🧠 Emotion Detection")
 
-# -------------------------------
-# HEADER
-# -------------------------------
-st.markdown('<div class="big-title">🧠 Emotion AI</div>', unsafe_allow_html=True)
-st.markdown('<div class="subtitle">Simple Emotion Detection from Text</div>', unsafe_allow_html=True)
+user_input = st.text_area("Enter text:")
 
-# -------------------------------
-# INPUT
-# -------------------------------
-user_input = st.text_area("Enter your text:")
-
-# -------------------------------
-# PREDICTION
-# -------------------------------
-if st.button("Predict Emotion"):
+if st.button("Predict"):
 
     if user_input.strip() == "":
-        st.warning("Please enter some text")
+        st.warning("Please enter text")
     else:
         cleaned = clean_text(user_input)
         vector = vectorizer.transform([cleaned])
@@ -118,17 +103,13 @@ if st.button("Predict Emotion"):
         prediction = model.predict(vector)[0]
         prediction = str(prediction).lower()
 
-        # standardize output
-        prediction = emotion_map.get(prediction, prediction)
-
-        # confidence
         probs = model.predict_proba(vector)[0]
         confidence = np.max(probs) * 100
 
         # -------------------------------
         # OUTPUT
         # -------------------------------
-        st.markdown("### 🎯 Emotion")
+        st.subheader("Emotion")
         st.success(prediction)
 
         st.write(f"Confidence: {confidence:.2f}%")
@@ -137,4 +118,4 @@ if st.button("Predict Emotion"):
 # FOOTER
 # -------------------------------
 st.markdown("---")
-st.caption("Built with Streamlit")
+st.caption("AI Emotion Detection App")
