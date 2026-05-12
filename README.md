@@ -21,14 +21,6 @@ emotion-prediction/
 │── Emotion Phrases.csv
 │── README.md
 
-▶️ How to Run Locally
-1.	Clone the repository
-git clone https://github.com/your-username/emotion-prediction.git
-cd emotion-prediction
-2.	Install dependencies
-pip install -r requirements.txt
-3.	Run the app
-streamlit run app.py
 
 📊 How It Works
 •	Text input is cleaned and preprocessed
